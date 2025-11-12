@@ -1,4 +1,5 @@
-from os import path
+from task_object import Task
+from os import path, sep, getlogin, makedirs
 from argparse import ArgumentParser
 from create_argument_template import template
 
@@ -43,12 +44,67 @@ def create_note(args):
         print(f"Error when trying to open file: {error}")
 
 
-        
-def create_task():
+
+def create_task(args):
+    """Function to create a task by adding it to a json file"""
+
+    #Logged in users name
+    user_name = getlogin()
+
+    #Os specific delimiter "/" or "\"
+    os_delimiter = sep
+
+    #Path for tasker
+    tasks_path = os_delimiter.join(["/home", user_name, ".config", "tasker"])
+
+    #json file for task
+    json_file = f"{args.file_name}.json" 
+
+    create_file_at_path(tasks_path, json_file)
+    
+    
+
+
+    
+
+
+
+def create_task_group(args):
     pass
 
+def add_to_task_groups(args):
+    pass
 
-def no_function():
+def create_file_at_path(given_path, file):
+
+    #Path for file
+    path_for_file = f"{given_path}{sep}{file}"
+
+    #Create path if path doesn't exist
+    if not path.exists(given_path):
+
+        try:
+            makedirs(given_path)
+
+        except OSError as error:
+            print(f"Error trying to create task: {error}")
+            return
+    
+    #Dont do anything if file already exists
+    if path.isfile(path_for_file):
+        print("File already exists")
+        return
+
+    #Open file at given path
+    try:
+        with open(path_for_file, "x") as file:
+           pass
+
+    #Error trying to open file
+    except IOError as error:
+        print(f"Error trying to make file: {error}")
+
+def no_function(args):
     """Empty function for when a command has no immediate functions"""
     pass
     
@@ -96,7 +152,9 @@ def main():
 
     args = main_parser.parse_args()
     
+    
     args.func(args)
 
 if __name__ == "__main__":
     main()
+
