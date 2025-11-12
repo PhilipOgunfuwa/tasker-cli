@@ -1,7 +1,11 @@
+from datetime import date
 from task_object import Task
+from json import dump, loads
 from os import path, sep, getlogin, makedirs
 from argparse import ArgumentParser
-from create_argument_template import template
+from create_argument_template import make_templates
+
+create_template, show_template = make_templates()
 
     
 def create_note(args):
@@ -28,7 +32,7 @@ def create_note(args):
         with open(note_name, "w") as file:
             #writing property stuff to file
 
-            file.write(f"\n* Properties\n")
+            file.write(f"* Properties\n")
             file.write("\n:PROPERTIES:")
             file.write(f"\n:CLASS: {args.class_name}")
             file.write(f"\n:TYPE: {args.creation_type}")
@@ -55,19 +59,51 @@ def create_task(args):
     os_delimiter = sep
 
     #Path for tasker
-    tasks_path = os_delimiter.join(["/home", user_name, ".config", "tasker"])
+    tasks_directory_path = os_delimiter.join(["/home", user_name, ".config", "tasker"])
 
     #json file for task
     json_file = f"{args.file_name}.json" 
 
-    create_file_at_path(tasks_path, json_file)
+    #Dictionary of arguments from namespace object (args)
+    task_attributes = {} 
+
+    for variable_name, content in vars(args).items():
+
+        #If content is a callable (like a function or method) dont add it
+        if hasattr(content, "__call__"):
+            continue
+        
+        #If content is a date type than make it a string
+        if isinstance(content, date):
+            content = content.strftime("%Y-%m-%d")
+
+        task_attributes[variable_name] = content
+
+
+
+    #Create file
+    try:
+        task_path = create_file_at_path(tasks_directory_path, json_file)
+
+    except FileExistsError as error:
+        print(f"Error trying to create task: {error}")
+        return
+
+    except Exception as error:
+        print(f"Something else went wrong please try again: {error}")
+        return
+
+    #Dumping arguments in Json file
+    try:
+        with open(task_path, "w") as file:
+            dump(task_attributes, file)
+            
+            if args.verbose:
+                print(f"Creating task{args.file_name}")
+            
     
-    
-
-
-    
-
-
+    except IOError as error:
+        print(f"Error when trying to open task: {error}")
 
 def create_task_group(args):
     pass
@@ -88,12 +124,11 @@ def create_file_at_path(given_path, file):
 
         except OSError as error:
             print(f"Error trying to create task: {error}")
-            return
     
     #Dont do anything if file already exists
     if path.isfile(path_for_file):
         print("File already exists")
-        return
+        raise FileExistsError("File already exist") 
 
     #Open file at given path
     try:
@@ -103,6 +138,8 @@ def create_file_at_path(given_path, file):
     #Error trying to open file
     except IOError as error:
         print(f"Error trying to make file: {error}")
+
+    return path_for_file
 
 def no_function(args):
     """Empty function for when a command has no immediate functions"""
@@ -133,17 +170,27 @@ def main():
 
     #Parser for note command 
     note = create_subparser.add_parser("note",
-                                       parents=[template],
+                                       parents=[create_template],
                                        description="<Implement Later>",
                                        prog="<Implement Even Later>",
                                        add_help=False)
 
     #Parser for task command
     task = create_subparser.add_parser("task",
-                                       parents=[template],
+                                       parents=[create_template],
                                        description="<Implement Later>",
                                        prog="<Implemenet Even Later>",
                                        add_help=False)
+    
+    #Parser for show command
+    show = main_subparser.add_parser("show",
+                                     description="<Description for show subparser>",
+                                     prog="<Prog nme for show>")
+
+    show_subparser = create.add_subparsers(title="<Title for create subparser>",
+                                           description="<Sub commands for showing notes, tasks, tasks groups>",
+                                           prog="<Sub commands for showing notes, tasks, tasks groups>")
+
 
     #Giving attribute of func to hold function to run when command is called
     main_parser.set_defaults(func=no_function)
