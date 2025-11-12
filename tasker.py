@@ -1,18 +1,62 @@
-from datetime import date
+from os import path
 from argparse import ArgumentParser
+from create_argument_template import template
 
-def create_note():
-    pass
+    
+def create_note(args):
+    """Function to create org mode file based on the arguments given"""
+
+    #Org mode file name
+    note_name = f"{args.file_name}.org"
+
+    #If org mode file exists asks if they want to overwrite or note
+    if path.exists(note_name):
+        print(f"{note_name} already exists in current working directory")
+        user_input = input("Would you like to overwrite this file? (y/N) >> ") 
+       
+        #Keep prompting user for yes or no
+        while user_input not in ["y", "Y", "n", "N"]:
+            user_input = input("Didn't understand input please try again. (y/N) >> ")
+
+        #If no stop
+        if user_input.lower() == "n":
+            return
+
+    #create org mode file based off name
+    try:
+        with open(note_name, "w") as file:
+            #writing property stuff to file
+
+            file.write(f"\n* Properties\n")
+            file.write("\n:PROPERTIES:")
+            file.write(f"\n:CLASS: {args.class_name}")
+            file.write(f"\n:TYPE: {args.creation_type}")
+            file.write(f"\n:Started: <{args.date_assigned}>")
+            file.write(f"\n:DEADLINE: <{args.due_date}>\n")
+            file.write(f"* ")
+
+            #Only prints out feedback if user uses -q argument
+            if args.verbose:
+                print(f"Created org file: {note_name}")
+                
+    except IOError as error:
+        print(f"Error when trying to open file: {error}")
+
+
+        
 def create_task():
     pass
 
 
+def no_function():
+    """Empty function for when a command has no immediate functions"""
+    pass
+    
 def main():
     
     #Main parser
     main_parser = ArgumentParser(prog="Tasker",
-                            description="Task organization and Agenda",
-                            epilog="test...")
+                            description="Task organization and Agenda")
 
 
     #sub parsers
@@ -21,38 +65,38 @@ def main():
                                       prog="<Prog for main subparser>")
 
     
-    #create command
+    #Parser for create command
     create = main_subparser.add_parser("create",
                                   description="<Description for create subparser>",
                                   prog="<Prog name here for create parser>")
-
-    #add help to these (flags for create commmand)
-    create.add_argument("-n", "--name", action="store", dest="name", default=None, 
-                        metavar="", help="Add name to file")
-    create.add_argument("-da", "--dateassigned", action="store", dest="date_assigned",
-                        metavar="", default=date.today(), help="Date when task is assigned") 
-    create.add_argument("-dd", "--duedate", action="store", dest="due_date", metavar="",
-                        default=date.today())
-    create.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=True,
-                        help="Verbosely explain what happened")
-    create.add_argument("-q", "--quiet", action="store_false", dest="verbose",
-                        help="Dont explain what happened")
-
 
     create_subparser = create.add_subparsers(title="<Title for create subparser>",
                                              description="<Sub commmands for creating notes, tasks, group tasks, etc>",
                                              prog="<Sub commands for creating notes, tasks, group tasks, etc>")
 
 
-    #possible commands for create
+    #Parser for note command 
     note = create_subparser.add_parser("note",
+                                       parents=[template],
                                        description="<Implement Later>",
-                                       prog="<Implement Even Later>")
+                                       prog="<Implement Even Later>",
+                                       add_help=False)
 
-    
+    #Parser for task command
+    task = create_subparser.add_parser("task",
+                                       parents=[template],
+                                       description="<Implement Later>",
+                                       prog="<Implemenet Even Later>",
+                                       add_help=False)
+
+    #Giving attribute of func to hold function to run when command is called
+    main_parser.set_defaults(func=no_function)
     note.set_defaults(func=create_note)
+    task.set_defaults(func=create_task)
 
-    main_parser.parse_args()
+    args = main_parser.parse_args()
+    
+    args.func(args)
 
 if __name__ == "__main__":
     main()
