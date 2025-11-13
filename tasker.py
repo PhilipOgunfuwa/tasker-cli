@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from create_argument_template import make_templates
 from create_command import create_note_function, create_task_function, create_task_group_function
 from update_tasker_files import add_note_to_list, create_file_at_tasker
-from remove_command import remove_task_function
+from remove_command import remove_task_function, remove_note_function
 
 create_template, show_template, remove_template = make_templates()
 
@@ -117,6 +117,7 @@ def main():
     create_task_group.set_defaults(func=create_task_group)
     show_note.set_defaults(func=show_note_function)
     remove_task.set_defaults(func=remove_task_function)
+    remove_note.set_defaults(func=remove_note_function)
     
 
     
