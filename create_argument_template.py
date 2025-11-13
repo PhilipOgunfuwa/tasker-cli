@@ -44,8 +44,19 @@ def make_templates():
     show_template.add_argument("-q", "--quiet", action="store_false", dest="verbose",
                                help="Don't explain what happened")
 
+    remove_template = ArgumentParser(prog="Template",
+                                     description="Template Description")
 
-    return create_template, show_template
+    remove_template.add_argument("-n", "--name", action="store", required=True, metavar="", nargs="*",
+                                 dest="file_names", help="Name(s) of file(s) to be removed")
+
+    remove_template.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=True,
+                                 help="Verbosely explain what happened")
+
+    remove_template.add_argument("-q", "--quiet", action="store_false", dest="verbose",
+                                 help="Don't explain what happened")
+
+    return create_template, show_template, remove_template
 
 if __name__ == "__main__":
    make_templates()

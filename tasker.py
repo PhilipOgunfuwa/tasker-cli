@@ -4,11 +4,10 @@ from os import path, sep, getlogin, makedirs
 from argparse import ArgumentParser
 from create_argument_template import make_templates
 from create_command import create_note_function, create_task_function, create_task_group_function
-from update_command import add_note_to_list, create_json_file_at_path
+from update_tasker_files import add_note_to_list, create_file_at_tasker
+from remove_command import remove_task_function
 
-create_template, show_template = make_templates()
-
-    
+create_template, show_template, remove_template = make_templates()
 
 def add_to_task_groups(args):
     pass
@@ -88,12 +87,37 @@ def main():
                                           prog="<Implement Even Later>",
                                           add_help=False)
 
+    #Parser for remove command
+    remove = main_subparser.add_parser("remove",
+                                       description="<Description for remove subparser>",
+                                       prog="<Prog name for remove>")
+
+    remove_subparser = remove.add_subparsers(title="<Title for remove subparser>",
+                                            description="<Sub commands for removing, notes, tasks, task groups>",
+                                            prog="<Sub commands for removing notes, tasks, task groups>")
+
+    remove_note = remove_subparser.add_parser("note",
+                                              parents=[remove_template],
+                                              description="<Implement Later>",
+                                              prog="<Implement Even Later>",
+                                              add_help=False)
+
+    remove_task = remove_subparser.add_parser("task",
+                                              parents=[remove_template],
+                                              description="<Implement Later>",
+                                              prog="<Implement Even Later>",
+                                              add_help=False)
+
+    
+
     #Giving attribute of func to hold function to run when command is called
     main_parser.set_defaults(func=no_function)
     create_note.set_defaults(func=create_note_function)
     create_task.set_defaults(func=create_task_function)
     create_task_group.set_defaults(func=create_task_group)
     show_note.set_defaults(func=show_note_function)
+    remove_task.set_defaults(func=remove_task_function)
+    
 
     
     args = main_parser.parse_args()
