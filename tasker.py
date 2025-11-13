@@ -1,5 +1,4 @@
 from datetime import date
-from task_object import Task
 from json import dump, load, decoder 
 from os import path, sep, getlogin, makedirs
 from argparse import ArgumentParser
@@ -8,7 +7,7 @@ from create_argument_template import make_templates
 create_template, show_template = make_templates()
 
     
-def create_note(args):
+def create_note_function(args):
     """Function to create org mode file based on the arguments given"""
 
     #Org mode file name
@@ -54,8 +53,8 @@ def create_note(args):
         print(f"Error when trying to open file: {error}")
 
 
-
 def add_note_to_list(args, path_to_note):
+    """Functin to add note to list of notes for show notes command"""
 
     #path to tasker notes list
     os_delimiter = sep
@@ -92,38 +91,39 @@ def add_note_to_list(args, path_to_note):
         print(f"Something went wrong: {error}\n Couldn't add note to list of notes BE CAUTIOUS")
         return
 
-    
-    #Dictinary that holds attributes of notes
-    notes_attributes = {}
+    #Empty list to hold attributes of note
+    note_attributes = {}
     
     #Creates JSON object for args attributes
     for variable_name, content in vars(args).items():
-
-        #If content is a callable (like a function or method) dont add it
-        if hasattr(content, "__call__"):
+        
+        #If instance is a callable method or function or a boolean don't add to attributes
+        if hasattr(content, "__call__") or isinstance(content, bool):
             continue
         
         #If content is a date type than make it a string
         if isinstance(content, date):
             content = content.strftime("%Y-%m-%d")
 
-        notes_attributes[variable_name] = content
+        note_attributes[variable_name] = content            
 
     #Makes path to note the key and then item the notes attributes
-    list_of_notes[path_to_note] = notes_attributes
+    list_of_notes[path_to_note] = note_attributes
 
+    
     with open(expanded_path_to_note_list, "w") as file:
-        dump(list_of_notes, file)
+        dump(list_of_notes, file, indent=6, skipkeys=True)
+
+        #Explain what happened to user
+        if args.verbose:
+            print(f"Added notes to list of notes @ {expanded_path_to_note_list}")
 
 
     
     
 
-def create_task(args):
+def create_task_function(args):
     """Function to create a task by adding it to a json file"""
-
-    #Logged in users name
-    user_name = getlogin()
 
     #Os specific delimiter "/" or "\"
     os_delimiter = sep
@@ -137,21 +137,20 @@ def create_task(args):
     #json file for task
     json_file = f"{args.file_name}.json" 
 
-    #Dictionary of arguments from namespace object (args)
-    task_attributes = {} 
+    #Empty dictionary that holds task attributes
+    task_attributes = {}
 
     for variable_name, content in vars(args).items():
-
-        #If content is a callable (like a function or method) dont add it
-        if hasattr(content, "__call__"):
-            continue
         
+        #If content is a callable method, function, or a boolean don't add to attributes of task
+        if hasattr(content, "__call__") or isinstance(content, bool):
+            continue
+
         #If content is a date type than make it a string
         if isinstance(content, date):
             content = content.strftime("%Y-%m-%d")
 
         task_attributes[variable_name] = content
-
     #Create file
     try:
         task_path = create_json_file_at_path(expanded_path, json_file)
@@ -167,7 +166,7 @@ def create_task(args):
     #Dumping arguments in Json file
     try:
         with open(task_path, "w") as file:
-            dump(task_attributes, file)
+            dump(task_attributes, file, indent=6, skipkeys=True)
             
             if args.verbose:
                 print(f"Creating task: {args.file_name}")
@@ -176,7 +175,7 @@ def create_task(args):
     except IOError as error:
         print(f"Error when trying to open task: {error}")
 
-def create_task_group(args):
+def create_task_group_function(args):
     pass
 
 def add_to_task_groups(args):
@@ -211,6 +210,9 @@ def create_json_file_at_path(given_path, file):
 
     return path_for_file
 
+def show_note_function(args):
+    pass
+
 def no_function(args):
     """Empty function for when a command has no immediate functions"""
     pass
@@ -239,14 +241,14 @@ def main():
 
 
     #Parser for note command 
-    note = create_subparser.add_parser("note",
+    create_note = create_subparser.add_parser("note",
                                        parents=[create_template],
                                        description="<Implement Later>",
                                        prog="<Implement Even Later>",
                                        add_help=False)
 
     #Parser for task command
-    task = create_subparser.add_parser("task",
+    create_task = create_subparser.add_parser("task",
                                        parents=[create_template],
                                        description="<Implement Later>",
                                        prog="<Implemenet Even Later>",
@@ -254,7 +256,7 @@ def main():
     
     #FIXME NOT IMPLEMENTED
     #Parser for task group command
-    task_group = create_subparser.add_parser("task group", 
+    create_task_group = create_subparser.add_parser("task group", 
                                              parents=[create_template],
                                              description="<Implement Later>",
                                              prog="<Implement Even Later>",
@@ -285,9 +287,11 @@ def main():
 
     #Giving attribute of func to hold function to run when command is called
     main_parser.set_defaults(func=no_function)
-    note.set_defaults(func=create_note)
-    task.set_defaults(func=create_task)
-    task_group.set_defaults(func=create_task_group)
+    create_note.set_defaults(func=create_note_function)
+    create_task.set_defaults(func=create_task_function)
+    create_task_group.set_defaults(func=create_task_group)
+    show_note.set_defaults(func=show_note_function)
+
     
     args = main_parser.parse_args()
     
