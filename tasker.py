@@ -3,17 +3,13 @@ from json import dump, load, decoder
 from os import path, sep, getlogin, makedirs
 from argparse import ArgumentParser
 from create_argument_template import make_templates
-from create_command import create_note_function, create_task_function, create_task_group_function
+from create_command import create_note_function, create_task_function
 from update_tasker_files import add_note_to_list, create_file_at_tasker
 from remove_command import remove_task_function, remove_note_function
+from show_command import show_task_function, show_note_function
 
 create_template, show_template, remove_template = make_templates()
 
-def add_to_task_groups(args):
-    pass
-
-def show_note_function(args):
-    pass
 
 def no_function(args):
     """Empty function for when a command has no immediate functions"""
@@ -56,15 +52,6 @@ def main():
                                        prog="<Implemenet Even Later>",
                                        add_help=False)
     
-    #FIXME NOT IMPLEMENTED
-    #Parser for task group command
-    create_task_group = create_subparser.add_parser("task group", 
-                                             parents=[create_template],
-                                             description="<Implement Later>",
-                                             prog="<Implement Even Later>",
-                                             add_help=False)
-
-    
     
     #Parser for show command
     show = main_subparser.add_parser("show",
@@ -81,7 +68,7 @@ def main():
                                           prog="<Implement Even Later>",
                                           add_help=False)
 
-    show_task = show_subparser.add_parser("show",
+    show_task = show_subparser.add_parser("task",
                                           parents=[show_template],
                                           description="<Implement Later>",
                                           prog="<Implement Even Later>",
@@ -114,8 +101,8 @@ def main():
     main_parser.set_defaults(func=no_function)
     create_note.set_defaults(func=create_note_function)
     create_task.set_defaults(func=create_task_function)
-    create_task_group.set_defaults(func=create_task_group)
     show_note.set_defaults(func=show_note_function)
+    show_task.set_defaults(func=show_task_function)
     remove_task.set_defaults(func=remove_task_function)
     remove_note.set_defaults(func=remove_note_function)
     

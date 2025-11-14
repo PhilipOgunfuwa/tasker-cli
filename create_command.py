@@ -78,7 +78,5 @@ def create_task_function(args):
      
 
 
-def create_task_group_function(args):
-    pass
 
 
