@@ -48,7 +48,7 @@ def show_task_function(args):
         return
 
     for task in list_of_tasks:
-        if task in args.file_names:
+        if task["file_name"] in args.file_names:
             print(dumps(task, indent=6, skipkeys=True))
             print()
 
