@@ -57,6 +57,9 @@ def make_templates():
     remove_template.add_argument("-n", "--name", action="extend", required=True, metavar="", nargs="+",
                                  dest="file_names", help="Name(s) of file(s) to be removed")
 
+    remove_template.add_argument("-dir", "--directory", action="extend", required=False, metavar="", nargs="*",
+                                 dest="directories", help="Directories of file(s) to be removed")
+
     remove_template.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=True,
                                  help="Verbosely explain what happened")
 
