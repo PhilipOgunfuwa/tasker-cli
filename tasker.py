@@ -7,6 +7,7 @@ from create_command import create_note_function, create_task_function
 from show_command import show_note_function, show_task_function
 from remove_command import remove_note_function, remove_task_function
 
+#Argument templates for create, show, and remove commands
 create_template, show_template, remove_template = make_templates()
 
 
@@ -18,80 +19,81 @@ def main():
     
     #Main parser
     main_parser = ArgumentParser(prog="Tasker",
-                            description="Task organization and Agenda")
-
+                                 description="Task and Note manager",
+                                 usage="%(prog)s [options] or %(prog)s [argument]")
 
     #sub parsers
-    main_subparser = main_parser.add_subparsers(title="<Title for main subparser>",
-                                      description="<Description for main subparser>",
-                                      prog="<Prog for main subparser>")
+    main_subparser = main_parser.add_subparsers()
 
     
     #Parser for create command
-    create = main_subparser.add_parser("create",
-                                  description="<Description for create subparser>",
-                                  prog="<Prog name here for create parser>")
+    create = main_subparser.add_parser("create", prog="create",
+                                       description="Create a org mode note or task",
+                                       usage="%(prog)s [options] or %(prog)s [argument]")
 
-    create_subparser = create.add_subparsers(title="<Title for create subparser>",
-                                             description="<Sub commmands for creating notes, tasks, group tasks, etc>",
-                                             prog="<Sub commands for creating notes, tasks, group tasks, etc>")
+    #Subparser that searches for note and task after create is read
+    create_subparser = create.add_subparsers()
 
 
     #Parser for note command 
     create_note = create_subparser.add_parser("note",
-                                       parents=[create_template],
-                                       description="<Implement Later>",
-                                       prog="<Implement Even Later>",
-                                       add_help=False)
+                                              parents=[create_template],
+                                              description="Create an org mode note",
+                                              prog="note",
+                                              usage="%(prog)s -n 'file name' [other options]",
+                                              add_help=False)
 
     #Parser for task command
     create_task = create_subparser.add_parser("task",
-                                       parents=[create_template],
-                                       description="<Implement Later>",
-                                       prog="<Implemenet Even Later>",
-                                       add_help=False)
+                                              parents=[create_template],
+                                              description="Create a task",
+                                              prog="task",
+                                              usage="%(prog)s -n 'file name' [other options]",
+                                              add_help=False)
     
     
     #Parser for show command
     show = main_subparser.add_parser("show",
-                                     description="<Description for show subparser>",
-                                     prog="<Prog nme for show>")
+                                     description="Show all or specified note(s) or task(s)",
+                                     prog="show",
+                                     usage="%(prog)s [option] or %(prog)s [argument]")
 
-    show_subparser = show.add_subparsers(title="<Title for create subparser>",
-                                         description="<Sub commands for showing notes, tasks, tasks groups>",
-                                         prog="<Sub commands for showing notes, tasks, tasks groups>")
+    show_subparser = show.add_subparsers()
 
     show_note = show_subparser.add_parser("note",
                                           parents=[show_template],
-                                          description="<Implement Later>",
-                                          prog="<Implement Even Later>",
+                                          description="Show org mode note(s)",
+                                          prog="note",
+                                          usage="%(prog)s -n 'file name1' 'file name 2' [other options]",
                                           add_help=False)
 
     show_task = show_subparser.add_parser("task",
                                           parents=[show_template],
-                                          description="<Implement Later>",
-                                          prog="<Implement Even Later>",
+                                          description="Show task(s)",
+                                          prog="task",
+                                          usage="%(progs)s -n 'fil name1' 'file name 2' [other options]",
                                           add_help=False)
 
     #Parser for remove command
     remove = main_subparser.add_parser("remove",
-                                       description="<Description for remove subparser>",
-                                       prog="<Prog name for remove>")
+                                       description="Delete specified note(s) or task(s)",
+                                       prog="remove",
+                                       usage="%(prog)s [option] or %(prog)s [argument]")
 
-    remove_subparser = remove.add_subparsers(title="<Title for remove subparser>",
-                                            description="<Sub commands for removing, notes, tasks, task groups>",
-                                            prog="<Sub commands for removing notes, tasks, task groups>")
+    remove_subparser = remove.add_subparsers()
 
     remove_note = remove_subparser.add_parser("note",
                                               parents=[remove_template],
-                                              description="<Implement Later>",
-                                              prog="<Implement Even Later>",
+                                              description="Remove org mode note(s) from list of notes",
+                                              prog="note",
+                                              usage="%(prog)s -n 'file name1' 'file name2' [other options]",
                                               add_help=False)
 
     remove_task = remove_subparser.add_parser("task",
                                               parents=[remove_template],
-                                              description="<Implement Later>",
-                                              prog="<Implement Even Later>",
+                                              description="Remove task(s) from list of notes",
+                                              prog="task",
+                                              usage="%(prog)s -n 'file name1' 'file name2' [other options]",
                                               add_help=False)
 
     
@@ -106,10 +108,10 @@ def main():
     remove_task.set_defaults(func=remove_task_function)
     
 
-    
+    #Main parser reads commands when tasker is called  
     args = main_parser.parse_args()
     
-    
+    #Appropriate functions are called based off of args 
     args.func(args)
 
 if __name__ == "__main__":
