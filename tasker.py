@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from datetime import date
 from json import dump, load, decoder 
 from os import path, sep, getlogin, makedirs
