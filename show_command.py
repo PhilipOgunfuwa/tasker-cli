@@ -1,106 +1,50 @@
 from json import load, dumps, decoder
 from os import path, sep
-from update_tasker_files import create_file_at_tasker
+from update_tasker_files import get_tasker_config_file_paths, restore_tasker_file
 
 def show_task_function(args):
 
-    
-    #path to tasker task list
-    os_delimiter = sep
-
-    path_to_task_list = os_delimiter.join(["~", ".config", "tasker", "list of tasks.json"])
-
-    #expanded path that includes home directory
-    expanded_path_to_task_list = path.expanduser(path_to_task_list)
-
-    #If no list of task file then try and make one
-    if not path.isfile(expanded_path_to_task_list):
-
-        try:
-            create_file_at_tasker("list of tasks.json")
-
-            if args.verbose:
-                print(f"Created list of tasks json file at {expanded_path_to_task_list}")
-
-        except Exception as error:
-            print(f"Something went wrong: {error}")
-            return
-
-    
-    #Opens list of tasks
-    try:
-        with open(expanded_path_to_task_list, "r") as file:
-            list_of_tasks = load(file)
-
-    #File is empty make json dictionary
-    except decoder.JSONDecodeError:
-        print(f"Couldn't open list of tasks b/c it was empty json")
-        return
-
-    except Exception as error:
-        print(f"Something went wrong: {error}\n Couldn't add note to list of notes BE CAUTIOUS")
-        return
-
-
-   
-    if args.show_all:
-        print(dumps(list_of_tasks, indent=6, skipkeys=True))
-        return
-
-    for task in list_of_tasks:
-        if task["file_name"] in args.file_names:
-            print(dumps(task, indent=6, skipkeys=True))
-            print()
-
-            
+    show_tasker_list(args, "list of tasks")
 
 def show_note_function(args):
 
+    show_tasker_list(args, "list of notes")
+
+def show_tasker_list(args, list_type):
+
+    #List of tasker paths
+    tasker_list_paths = get_tasker_config_file_paths()
+
+    #If path for list type doesn't exist than restore it
+    if not path.exists(tasker_list_paths[list_type]):
+        restore_tasker_file(args, tasker_list_paths[list_type])
+
     
-    #path to tasker note list
-    os_delimiter = sep
-
-    path_to_notes_list = os_delimiter.join(["~", ".config", "tasker", "list of notes.json"])
-
-    #expanded path that includes home directory
-    expanded_path_to_notes_list = path.expanduser(path_to_notes_list)
-
-    #If no list of note file then try and make one
-    if not path.isfile(expanded_path_to_notes_list):
-
-        try:
-            create_file_at_tasker("list of notes.json")
+    specified_list_path = tasker_list_paths[list_type]
+            
+    try:
+        with open(specified_list_path, "r") as file:
+            taskers_list = load(file)
 
             if args.verbose:
-                print(f"Created list of tasks json file at {expanded_path_to_notes_list}")
+                print(f"Successfully opened {list_type}")
 
-        except Exception as error:
-            print(f"Something went wrong: {error}")
-            return
+    except decoder.JSONDecodeError as error:
+        print(f"Couldn't open JSON file: {error}")
+        return
 
-    
-    #Opens list of tasks
-    try:
-        with open(expanded_path_to_notes_list, "r") as file:
-            list_of_notes = load(file)
-
-    #File is empty make json dictionary
-    except decoder.JSONDecodeError:
-        print(f"Couldn't open list of tasks b/c it was empty json")
+    except IOError as error:
+        print(f"Couldn't open file: {error}")
         return
 
     except Exception as error:
-        print(f"Something went wrong: {error}\n Couldn't add note to list of notes BE CAUTIOUS")
+        print(f"Something unexpected happened: {error}")
         return
 
-
-   
     if args.show_all:
-        print(dumps(list_of_notes, indent=6, skipkeys=True))
-        return
+        print(dumps(taskers_list, indent=6))
 
-    for note_path, note in list_of_notes.copy().items():
-        if note["file_name"] in args.file_names or note_path in args.file_paths:
-            print(dumps(list_of_notes[note_path], indent=6, skipkeys=True))
-            print()
-
+    else:
+        for item in taskers_list:
+            if item["file_name"] in args.file_names:
+                print(dumps(item, indent=6))

@@ -1,121 +1,74 @@
 from datetime import date
 from os import path, sep, remove
 from json import load, dump, decoder
+from update_tasker_files import get_tasker_config_file_paths, restore_tasker_file
+
 
 def remove_task_function(args):
 
-    #path to tasker task list
-    os_delimiter = sep
+    remove_tasker_list(args, "list of tasks")
 
-    path_to_task_list = os_delimiter.join(["~", ".config", "tasker", "list of tasks.json"])
-
-    #expanded path that includes home directory
-    expanded_path_to_task_list = path.expanduser(path_to_task_list)
-
-    #If no task list file do nothing
-    if not path.isfile(expanded_path_to_task_list):
-        print(f"Didn't remove task because their is no task list @: {expanded_path_to_task_list}")
-        return
-
-
-    #Open task list 
-    try:
-        with open(expanded_path_to_task_list, "r") as file:
-            task_list = load(file)    
-
-    #If empty json file than make empty list
-    except decoder.JSONDecodeError: 
-        task_list = []
-
-    #Removes tasks named from the arguments
-    for task in task_list.copy():
-        if task["file_name"] in args.file_names:
-            task_list.remove(task)
-
-    #Add task list with removed tasks back
-    try:
-        with open(expanded_path_to_task_list, "w") as file:
-            dump(task_list, file, indent=6, skipkeys=True)
-
-            if args.verbose:
-                print(f"Removed the following files {args.file_names}")
-                print(f"Now only {len(task_list)} tasks")
-
-    except IOError as error:
-        print(f"Couldn't dump to the task file so no changes made: {error}")
-        return
-
-    except Exception as error:
-        print(f"Something went wrong: {error}")
-        return
-
-    
 def remove_note_function(args):
 
+    remove_tasker_list(args, "list of notes")
 
-    #path to tasker note list
-    os_delimiter = sep
+def remove_tasker_list(args, list_type):
 
-    path_to_note_list = os_delimiter.join(["~", ".config", "tasker", "list of notes.json"])
+    #List of tasker paths
+    tasker_list_paths = get_tasker_config_file_paths()
 
-    #expanded path that includes home directory
-    expanded_path_to_note_list = path.expanduser(path_to_note_list)
+    #If path for list type doesn't exist than restore it
+    if not path.exists(tasker_list_paths[list_type]):
+        restore_tasker_file(args, tasker_list_paths[list_type])
 
-    #If no note list file do nothing
-    if not path.isfile(expanded_path_to_note_list):
-        print(f"Didn't remove task because their is no task list @: {expanded_path_to_note_list}")
-        return
-
-
-    #Open note list 
-    try:
-        with open(expanded_path_to_note_list, "r") as file:
-            note_list = load(file)    
-
-    #If empty json file than make empty list
-    except decoder.JSONDecodeError: 
-        note_list = {}
-
-    except Exception as error:
-        print(f"Something went wrong please try again: {error}")
-        return
-
-    #Removes notes  named from the arguments
-    for note_path, note in note_list.copy().items():
-
-        #if file name or path of note given remove the note
-        if note["file_name"] in args.file_names or note_path in args.file_paths:
-
-            #Remove note from note_path 
-            try:
-                remove(note_path)
-
-            except Exception as error:
-                print(f"Something went horribly wrong aborting operation: {error}")
-                return
-
-            #Remove note from json list
-            note_list.pop(note_path)
+    
+    specified_list_path = tasker_list_paths[list_type]
             
-            if args.verbose:
-                print(f"Removed {note} from list of tasker notes, and from list of tasker notes")
-
-        
-
-    #Add task list with removed tasks back
     try:
-        with open(expanded_path_to_note_list, "w") as file:
-            dump(note_list, file, indent=6, skipkeys=True)
+        with open(specified_list_path, "r") as file:
+            taskers_list = load(file)
 
             if args.verbose:
-                print(f"Removed the following files {args.file_names}")
-                print(f"Now only {len(note_list)} tasks")
+                print(f"Successfully opened {list_type}")
+
+    except decoder.JSONDecodeError as error:
+        print(f"Couldn't open JSON file: {error}")
+        return
 
     except IOError as error:
-        print(f"Couldn't dump to the task file so no changes made: {error}")
+        print(f"Couldn't open file: {error}")
         return
 
     except Exception as error:
-        print(f"Something went wrong: {error}")
+        print(f"Something unexpected happened: {error}")
         return
 
+
+    for item in taskers_list:
+        if item["file_name"] in args.file_names:
+
+            taskers_list.remove(item)
+
+            if args.verbose:
+                print(f"Removed {item["file_name"]} from {list_type}")
+
+
+    
+    try:
+        with open(specified_list_path, "w") as file:
+            dump(taskers_list, file, indent=6)
+
+            if args.verbose:
+                print(f"Successfully removed items from {list_type}")
+
+    except decoder.JSONDecodeError as error:
+        print(f"Couldn't copy changes to JSON file: {error}")
+        return
+
+    except IOError as error:
+        print(f"Couldn't open file to copy changes: {error}")
+        return
+
+    except Exception as error:
+        print(f"Something unexpected happened: {error}")
+        return

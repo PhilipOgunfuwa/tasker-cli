@@ -1,7 +1,7 @@
 from datetime import date
 from json import dump 
 from os import path, sep
-from update_tasker_files import create_file_at_tasker, add_note_to_list, add_task_to_list
+from update_tasker_files import add_to_tasker_list
     
 def create_note_function(args):
     """Function to create org mode file based on the arguments given"""
@@ -36,24 +36,31 @@ def create_note_function(args):
             file.write(f"\n:DEADLINE: <{args.due_date}>\n")
             file.write(f"* ")
 
-            #Only prints out feedback if user uses -q argument
+            #Only prints out feedback if user uses -v argument
             if args.verbose:
                 print(f"Created org file: {note_name}")
-                
-            #Adding note to list of notes and their paths etc...
-            path_to_note = path.abspath(file.name)
 
-            add_note_to_list(args, path_to_note)
 
     except IOError as error:
         print(f"Error when trying to open file: {error}")
+        return
+
+    note_attributes = create_serializable_json_data(args)
+
+    add_to_tasker_list(args, note_attributes, "list of notes")
 
 
 def create_task_function(args):
     """Function to create a task by adding it to a json file"""
 
-    #Empty dictionary that holds the attributes of the task
-    task_attributes = {}
+    task_attributes = create_serializable_json_data(args)
+
+    add_to_tasker_list(args, task_attributes, "list of tasks")
+    
+def create_serializable_json_data(args):
+    """Function that makes all of the arguments JSON serializable"""
+
+    tasker_attributes = {}
 
     #Adding JSON serializable objects to task_attributes
     for variable_name, content in vars(args).items():
@@ -66,14 +73,11 @@ def create_task_function(args):
         if isinstance(content, date):
             content = content.strftime("%Y-%m-%d")
 
-        task_attributes[variable_name] = content
-      
-    try:
-       #add task to list
-       add_task_to_list(args, task_attributes)
+        tasker_attributes[variable_name] = content
 
-    except IOError:
-       print(f"Error when trying to open file: {error}")
+    return tasker_attributes
+
+    
 
      
 

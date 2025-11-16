@@ -2,152 +2,199 @@ from datetime import date
 from os import path, sep, makedirs
 from json import dump, load, decoder
 
-def create_file_at_tasker(file):
 
-    os_delimiter = sep
-
-    #path for tasker
-    path_to_tasker = os_delimiter.join(["~", ".config", "tasker"])
-    expanded_path_to_tasker = path.expanduser(path_to_tasker)
-
-    #Path for file
-    path_to_file = os_delimiter.join([path_to_tasker, file])
-    expanded_path_to_file = path.expanduser(path_to_file)
-
-    #Create path if path doesn't exist
-    if not path.exists(expanded_path_to_tasker):
-
-        try:
-            makedirs(expanded_path_to_tasker)
-
-        except OSError as error:
-            print(f"Error trying to create task: {error}")
-    
-    #Dont do anything if file already exists
-    if path.isfile(expanded_path_to_file):
-        return
-
-    #Open file at given path
-    try:
-        with open(expanded_path_to_file, "x") as file:
-           pass
-
-    #Error trying to open file
-    except IOError as error:
-        print(f"Error trying to make file: {error}")
-
-    return expanded_path_to_file
-
-def add_task_to_list(args, task_attributes):
+def add_to_tasker_list(args, type_attributes, list_type):
     """Function to add task to list of tasks for show tasks command"""
 
-    #path to tasker task list
-    os_delimiter = sep
+    #List of tasker paths
+    tasker_list_paths = get_tasker_config_file_paths()
 
-    path_to_task_list = os_delimiter.join(["~", ".config", "tasker", "list of tasks.json"])
+    #If path for list type doesn't exist than restore it
+    if not path.exists(tasker_list_paths[list_type]):
+        restore_tasker_file(args, tasker_list_paths[list_type])
 
-    #expanded path that includes home directory
-    expanded_path_to_task_list = path.expanduser(path_to_task_list)
+    
+    specified_list_path = tasker_list_paths[list_type]
 
-    #If no list of task file then try and make one
-    if not path.isfile(expanded_path_to_task_list):
+    
+    #Load specifid JSON file
+    try:
+        with open(specified_list_path, "r") as file:
+            tasker_list = load(file)
+
+    except decoder.JSONDecodeError as error:
+        print(f"Problem with {list_type} JSON file: {error}")
+        return
+
+    except IOError as error:
+        print(f"Couldn't open the {list_type} file: {error}")
+        return
+
+    except Exception as Error:
+        print(f"Something unexpected went wrong: {error}")
+        return
+
+    #Add attribute to JSON file
+    tasker_list.append(type_attributes)
+    
+    #Rewrite JSON file
+    try:    
+        with open(specified_list_path, "w") as file:
+            dump(tasker_list, file, indent=6, skipkeys=True)
+
+            #Explain what happened to user
+            if args.verbose:
+                print(f"Added to {list_type}  @ {specified_list_path}")
+
+    except decoder.JSONDecodeError as error:
+        print(f"Problem with {list_type} JSON file: {error}")
+        print("Failed to update list")
+        return
+
+    except IOError as error:
+        print(f"Couldn't open the {list_type} file: {error}")
+        print("Failed to update list")
+        return
+
+    except Exception as error:
+        print(f"Something unexpected went wrong: {error}")
+        print("Failed to update list")
+        return
+
+
+def make_path_for_tasker(tasker_path):
+    """Function that makes path of tasker if necessary"""
+
+    #If path doesn't exist then make path
+    if not path.exists(tasker_path):
 
         try:
-            create_file_at_tasker("list of tasks.json")
+            makedirs(tasker_path)
 
-        except Exception as error:
-            print(f"Something went wrong: {error}")
+        except OSError as error:
+            
+            print(f"Couldn't make directory for tasker config: {error}")
             return
 
-    
-    #Opens list of tasks
-    try:
-        with open(expanded_path_to_task_list, "r") as file:
-            list_of_tasks = load(file)
 
-    #File is empty make json dictionary
-    except decoder.JSONDecodeError:
-        list_of_tasks = []
+    #map of tasker config files
+    tasker_files = {}
+    tasker_files["tasker config"] = sep.join([tasker_path, "tasker config.json"])
+    tasker_files["list of notes"] = sep.join([tasker_path, "list of notes.json"])
+    tasker_files["list of tasks"] = sep.join([tasker_path, "list of tasks.json"])
 
-    except Exception as error:
-        print(f"Something went wrong: {error}\n Couldn't add note to list of notes BE CAUTIOUS")
-        return
+    #Make necessary files
+    for file_name, file_path in tasker_files.items():
 
-    #Makes path to note the key and then item the notes attributes
-    list_of_tasks.append(task_attributes)
+        print(f"Trying to make following path: {file_path}")
 
-    
-    with open(expanded_path_to_task_list, "w") as file:
-        dump(list_of_tasks, file, indent=6, skipkeys=True)
+        if path.exists(file_path):
+            user_input = input(f"{file_path} already exists would you like to overwrrite it? (y/N): ")
 
-        #Explain what happened to user
-        if args.verbose:
-            print(f"Added task to list of tasks  @ {expanded_path_to_task_list}")
+            while user_input not in ["y", "Y", "n", "N"]:
+                user_input = input(f"Invalid input please try again (y/N): ")
 
+            if user_input.lower() == "n":
+                print(f"Aborted trying to make {file_path} directory\n")
+                continue
 
-    
-def add_note_to_list(args, path_to_note):
-    """Functin to add note to list of notes for show notes command"""
-
-    #path to tasker notes list
-    os_delimiter = sep
-
-    path_to_note_list = os_delimiter.join(["~", ".config", "tasker", "list of notes.json"])
-
-    #Expanded path that includes home directory
-    expanded_path_to_note_list = path.expanduser(path_to_note_list)
-
-    #If no list of notes file then try and make one
-    if not path.isfile(expanded_path_to_note_list):
         try:
-            create_file_at_tasker("list of notes.json")
+            with open(file_path, "w") as file:
+                
+                if file_name == "tasker config":
+                    dump(tasker_files, file, indent=6)
+
+                else:
+                    dump([], file, indent=6)
+                    
+            
+            print(f"Successfully made {file_name}\n")
+
+        except IOError as error:
+            print(f"Couldn't open {file_path} because of {error}")
 
         except Exception as error:
             print(f"Something went wrong: {error}")
-            return 
 
+def make_default_tasker_path():
+    """Function makes default tasker path"""
+    make_path_for_tasker(get_tasker_path())
 
+def get_tasker_path(expanded_path=True):
+    """Function that returns default tasker path"""
 
-    #Opens list of notes
+    DEFAULT_PATH = sep.join(["~", ".config", "tasker"])
+    EXPANDED_DEFAULT_PATH = path.expanduser(DEFAULT_PATH)
+
+    return EXPANDED_DEFAULT_PATH if expanded_path else DEFAULT_PATH
+
+def get_tasker_config_file_paths():
+    """Function that gets tasker config file that has all of the paths to other tasker files"""
+
+    PATH_TO_TASKER = get_tasker_path()
+
+    TASKER_CONFIG_PATH = sep.join([PATH_TO_TASKER, "tasker config.json"])
+
+    #If path note made create tasker files if specified
+    if not path.exists(PATH_TO_TASKER):
+
+        user_input = input(f"{PATH_TO_TASKER} doesn't exist would you like to recreate it and all tasker config files?  (y/N): ")
+
+        while user_input not in ["y", "Y", "n", "N"]:
+            user_input = input(f"Invalid input please try again (y/N): ")
+
+        if user_input.lower() == "n":
+            print(f"Aborted trying to make {PATH_TO_TASKER} directory\n")
+            return
+
+        make_default_tasker_path()
+
     try:
-        with open(expanded_path_to_note_list, "r") as file:
-            list_of_notes = load(file)
+        with open(TASKER_CONFIG_PATH, "r") as file:
+            tasker_file_paths = load(file)
 
-    #File is empty make json dictionary
-    except decoder.JSONDecodeError:
-        list_of_notes = {}
-
-    except Exception as error:
-        print(f"Something went wrong: {error}\n Couldn't add note to list of notes BE CAUTIOUS")
+    except decoder.JSONDecodeError as error:
+        print(f"Couldn't open config JSON file: {error}")
         return
 
-    #Empty list to hold attributes of note
-    note_attributes = {}
+    except IOError as error:
+        print(f"Couldn't open file: {error}")
+        return
+
+    except Exception as error:
+        print(f"Something unexpected happened: {error}")
+        return
+
+    return tasker_file_paths
+
+def restore_tasker_file(args, file_path):
+    """Restore tasker files if necessary"""
+
+    try:
+        with open(file_path, "w") as file:
+            dump([], file, indent=6)
+
+            if args.verbose:
+                print(f"Successfully restored {file_path}")
     
-    #Creates JSON object for args attributes
-    for variable_name, content in vars(args).items():
-        
-        #If instance is a callable method or function or a boolean don't add to attributes
-        if hasattr(content, "__call__") or isinstance(content, bool):
-            continue
-        
-        #If content is a date type than make it a string
-        if isinstance(content, date):
-            content = content.strftime("%Y-%m-%d")
+    except IOError as error:
+        print(f"Couldn't create {file_path}: {error}")
+        return
 
-        note_attributes[variable_name] = content            
+    except OSError as error:
+        print(f"OS didn't allow for tasker to create {file_path}: {error}")
+        return
 
-    #Makes path to note the key and then item the notes attributes
-    list_of_notes[path_to_note] = note_attributes
+    except Exception as error:
+        print(f"Something unexpected happened: {error}")
+        return
 
+    return file_path
+
+if __name__ == "__main__":
+
+    make_default_tasker_path()
     
-    with open(expanded_path_to_note_list, "w") as file:
-        dump(list_of_notes, file, indent=6, skipkeys=True)
+       
 
-        #Explain what happened to user
-        if args.verbose:
-            print(f"Added notes to list of notes @ {expanded_path_to_note_list}")
-
-
-
-
+                 
