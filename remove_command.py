@@ -83,38 +83,35 @@ def remove_tasker_list(args, list_type):
         return
     
     files_to_be_removed = set(args.file_names)
+    new_taskers_list = []
 
     #Removes specified files
     for item in taskers_list.copy():
         if item["file_name"] in files_to_be_removed:
 
-            #Remove file from its directory
+            #Remove file from current directory
             if "file type" in item:
                 remove_from_tasker = remove_file_in_cwd(args, item["file_name"], item["file type"])    
 
                 if not remove_from_tasker:
+                    new_taskers_list.append(item)
                     continue
-
-            taskers_list.remove(item)
-            files_to_be_removed.remove(item["file_name"])
-                     
 
             if args.verbose:
                 print(f"Removed {item["file_name"]} from {list_type}")
+
+        else:
+            new_taskers_list.append(item)
 
 
     
     #Add files back
     try:
         with open(specified_list_path, "w") as file:
-            dump(taskers_list, file, indent=6)
+            dump(new_taskers_list, file, indent=6)
 
             if args.verbose:
                 print(f"Successfully removed items from {list_type}")
-
-                if len(files_to_be_removed) != 0:
-                    print(f"Files not removed: {files_to_be_removed}")
-
 
 
     except decoder.JSONDecodeError as error:
