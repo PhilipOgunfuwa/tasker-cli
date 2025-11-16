@@ -1,14 +1,15 @@
 from json import load, dumps, decoder
 from os import path, sep
 from update_tasker_files import get_tasker_config_file_paths, restore_tasker_file
+from config import list_of_notes, list_of_tasks
 
 def show_task_function(args):
 
-    show_tasker_list(args, "list of tasks")
+    show_tasker_list(args, list_of_tasks)
 
 def show_note_function(args):
 
-    show_tasker_list(args, "list of notes")
+    show_tasker_list(args, list_of_notes)
 
 def show_tasker_list(args, list_type):
 

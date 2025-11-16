@@ -1,6 +1,7 @@
 from datetime import date
 from os import path, sep, makedirs
 from json import dump, load, decoder
+from config import tasker_config, list_of_notes, list_of_tasks
 
 
 def add_to_tasker_list(args, type_attributes, list_type):
@@ -79,9 +80,9 @@ def make_path_for_tasker(tasker_path):
 
     #map of tasker config files
     tasker_files = {}
-    tasker_files["tasker config"] = sep.join([tasker_path, "tasker config.json"])
-    tasker_files["list of notes"] = sep.join([tasker_path, "list of notes.json"])
-    tasker_files["list of tasks"] = sep.join([tasker_path, "list of tasks.json"])
+    tasker_files[tasker_config] = sep.join([tasker_path, f"{tasker_config}.json"])
+    tasker_files[list_of_notes] = sep.join([tasker_path, f"{list_of_notes}.json"])
+    tasker_files[list_of_tasks] = sep.join([tasker_path, f"{list_of_tasks}.json"])
 
     #Make necessary files
     for file_name, file_path in tasker_files.items():
@@ -101,7 +102,7 @@ def make_path_for_tasker(tasker_path):
         try:
             with open(file_path, "w") as file:
                 
-                if file_name == "tasker config":
+                if file_name == tasker_config:
                     dump(tasker_files, file, indent=6)
 
                 else:
@@ -133,7 +134,7 @@ def get_tasker_config_file_paths():
 
     PATH_TO_TASKER = get_tasker_path()
 
-    TASKER_CONFIG_PATH = sep.join([PATH_TO_TASKER, "tasker config.json"])
+    TASKER_CONFIG_PATH = sep.join([PATH_TO_TASKER, f"{tasker_config}.json"])
 
     #If path note made create tasker files if specified
     if not path.exists(PATH_TO_TASKER):

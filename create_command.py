@@ -1,7 +1,8 @@
 from datetime import date
 from json import dump 
-from os import path, sep
+from os import path, sep, getcwd
 from update_tasker_files import add_to_tasker_list
+from config import list_of_notes, list_of_tasks
     
 def create_note_function(args):
     """Function to create org mode file based on the arguments given"""
@@ -46,8 +47,11 @@ def create_note_function(args):
         return
 
     note_attributes = create_serializable_json_data(args)
+    
+    #Adds diretory of note so you can remove note later
+    note_attributes["file type"] = "org"
 
-    add_to_tasker_list(args, note_attributes, "list of notes")
+    add_to_tasker_list(args, note_attributes, list_of_notes)
 
 
 def create_task_function(args):
@@ -55,7 +59,7 @@ def create_task_function(args):
 
     task_attributes = create_serializable_json_data(args)
 
-    add_to_tasker_list(args, task_attributes, "list of tasks")
+    add_to_tasker_list(args, task_attributes, list_of_tasks)
     
 def create_serializable_json_data(args):
     """Function that makes all of the arguments JSON serializable"""
