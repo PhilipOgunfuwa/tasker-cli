@@ -35,7 +35,7 @@ def create_note_function(args):
             file.write(f"\n:DESCRIPTION: {args.description}")
             file.write(f"\n:STARTED: <{args.date_assigned}>")
             file.write(f"\n:DEADLINE: <{args.due_date}>\n")
-            file.write(f"* ")
+            file.write(f"\n* ")
 
             #Only prints out feedback if user uses -v argument
             if args.verbose:

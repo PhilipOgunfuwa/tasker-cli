@@ -192,9 +192,6 @@ def restore_tasker_file(args, file_path):
 
     return file_path
 
-if __name__ == "__main__":
-
-    make_default_tasker_path()
     
        
 
